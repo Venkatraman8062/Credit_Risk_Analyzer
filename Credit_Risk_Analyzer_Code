@@ -1,0 +1,1409 @@
+COURSE PROJECT - CREDIT RISK ANALYZER
+
+Objectives:
+Task 1 - Importing necessary Modules:
+
+Import the modules necessary for Data Manipulation and Visualization.
+Task 2 - Reading dataset:
+
+Read the dataset containing loan applicant information.
+Task 3 - Exploring the Dataset:
+
+Understand the Structure and various datatypes of the attributes within the dataset.
+Task 4 - Missing value analysis:
+
+Identify and analyze missing values in the dataset.
+Task 5 - Analysing categorical and numerical columns:
+
+Analyze categorical and numerical columns to understand the statistical properties and relationships within the dataset.
+Task 6 - Univariate Analysis:
+
+Conduct univariate analysis to explore the distribution and characteristics of individual variables.
+Task 7 - Outliers:
+
+Identify and analyze outliers within the dataset to understand their impact on the analysis.
+Task 8 - Merging Datasets:
+
+Identify and merge different Datasets for further analysis.
+Task 9 - Bivariate analysis:
+
+Conduct bivariate analysis to explore relationships between different variables and their impact on loan default rates.
+
+[ ]
+#Import neccesary libraries for Data Analysis and Visualization.
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
+
+#Reading the Data Sets
+application_data = pd.read_csv('/content/drive/MyDrive/application_data.csv')
+application_data.head()
+
+#Get the Dimension of the DataFrame
+application_data.shape
+
+#Display and check data types of all columns
+application_data.iloc[ : , 0:100].info()
+
+'''
+Calculating the missing values in the Data Set in all Columns
+'''
+missing_values_count = application_data.isnull().sum().sort_values(ascending=False)
+missing_values_count
+
+
+
+[ ]
+#Calculate the proportion of non missing values for each column
+
+train_missing = application_data.count()/len(application_data)
+train_missing = (1.00 - train_missing) * 100
+
+#Sort the missing percentages in the descending order and display the top 60
+train_missing.sort_values(ascending=False)[:60]
+
+
+MISSING DATA MANAGEMENT
+
+The DataSet contains some rows with missing values above 47% and above. The missing values are either Mean, Median or Mode. Hence they cannot be replaced and will not be taking into evaluation. We will analyse the remaining data. We will remove the data that has missing values above 45 percent for this analysis.
+
+
+[ ]
+# Remove columns with more than 50% missing values
+train = application_data.loc[:, train_missing < 50]
+
+# Display the new dataset shape
+train.shape
+(307511, 81)
+
+[ ]
+# Calculate the proportion of non-missing values for each column
+train_missing_2 = train.count() / len(train)
+
+# Convert the proportions to percentages and calculate the percentage of missing values for each column
+train_missing_2 = (1 - train_missing_2) * 100
+
+# Sort the missing percentages in descending order
+train_missing_2[train_missing_2 > 0].sort_values(ascending=False)
+
+OCCUPATION TYPE COLUMN
+
+Occupation Type is a key factor in assessing borrower risk. To maintain data integrity, we retain this column even when values are missing. Missing Occupation Types are imputed with the category 'Unknown'.
+
+
+[ ]
+#Add "UNKNOWN" to the missing value in the OCCUPATION_TYPE column.
+train['OCCUPATION_TYPE'].fillna('Unknown', inplace=True)
+train
+
+#Display the OCCUPATION_TYPE column
+train['OCCUPATION_TYPE']
+
+
+
+[ ]
+#Plot a countplot for occupation type and count where x axis is occupation type and y axis is count.
+sns.countplot(y='OCCUPATION_TYPE', data=train, order=train['OCCUPATION_TYPE'].value_counts().index)
+plt.show()
+
+
+CONCLUSION
+
+Approximately 31% of the missing values within a specific column are currently filled with the placeholder "Unknown." Due to the high prevalence of this category and the lack of suitable imputation methods based on other columns, these values have been retained in their original form without further modification.
+
+EXT_SOURCE_3 COLUMN
+
+Given the 20% missing data rate in the specified float column, the following approach will be adopted:
+
+1 Visual Analysis: A histogram will be generated to assess the distribution of the non-missing values.
+
+2 Data Distribution: The shape of the distribution will inform the choice of imputation method.
+
+3 Imputation: Appropriate imputation techniques, such as mean, median, or mode imputation, will be applied based on the identified distribution to fill in the missing values.
+
+
+[ ]
+#Plot a histogram for EXT_SOURCE_3 column
+sns.histplot(train['EXT_SOURCE_3'], kde=True)
+plt.show()
+
+The visual analysis indicates a left-skewed distribution of the non-missing values in the column.
+
+
+[ ]
+#Find the mean, median and skew of EXT_SOURCE_3 column
+print(f"Mean: {train['EXT_SOURCE_3'].mean()}")
+print(f"Median: {train['EXT_SOURCE_3'].median()}")
+print(f"Skew: {train['EXT_SOURCE_3'].skew()}")
+Mean: 0.5108529061799658
+Median: 0.5352762504724826
+Skew: -0.4093904596160267
+Based on the observed left-skewed distribution, median imputation will be employed to fill in the missing values within the EXT_SOURCE_3 column.
+
+
+[ ]
+#Fill the empty columns in the EXT_SOURCE_3 column with median
+train['EXT_SOURCE_3'].fillna(train['EXT_SOURCE_3'].median(), inplace=True)
+
+#Display top 10 values in EXT_SOURCE_3 column
+train['EXT_SOURCE_3'].head(10)
+
+
+AMT_REQ_CREDIT_BUREAU_YEAR COLUMN
+
+To address missing values in the specified column, we will first identify the unique non-missing values and their corresponding frequencies. Subsequently, the most appropriate imputation method (mean, median, or mode) will be selected based on the distribution of the non-missing values.
+
+
+[ ]
+#Find the count of unique values in the AMT_REQ_CREDIT_BUREAU_YEAR column.
+train['AMT_REQ_CREDIT_BUREAU_YEAR'].value_counts()
+
+To gain a more comprehensive understanding of the data distribution, a histogram will be constructed to visually represent the frequency of different values within the column.
+
+
+[ ]
+#Plot a histogram for AMT_REQ_CREDIT_BUREAU_YEAR column against unique values.
+train['AMT_REQ_CREDIT_BUREAU_YEAR'].value_counts().plot(kind='bar')
+plt.show()
+
+The histogram indicates a right-skewed distribution of the data.
+
+
+[ ]
+#Calculate the mean, median and mode of the AMT_REQ_CREDIT_BUREAU_YEAR column.
+print(f"Mean: {train['AMT_REQ_CREDIT_BUREAU_YEAR'].mean()}")
+print(f"Median: {train['AMT_REQ_CREDIT_BUREAU_YEAR'].median()}")
+print(f"Mode: {train['AMT_REQ_CREDIT_BUREAU_YEAR'].mode()}")
+
+Mean: 1.899974435321363
+Median: 1.0
+Mode: 0    0.0
+Name: AMT_REQ_CREDIT_BUREAU_YEAR, dtype: float64
+
+[ ]
+#Fill the empty columns in the AMT_REQ_CREDIT_BUREAU_YEAR column with mode.
+train['AMT_REQ_CREDIT_BUREAU_YEAR'].fillna(train['AMT_REQ_CREDIT_BUREAU_YEAR'].mode(), inplace=True)
+CONCLUSION
+
+Given the discrete nature of the data, the missing values will be filled with the mode (0.0), which is the most frequent value among non-missing entries.
+
+AMT_REQ_CREDIT_BUREAU_QRT COLUMN
+
+To address missing values in the specified column, we will first identify the unique non-missing values and their corresponding frequencies. Subsequently, the most appropriate imputation method (mean, median, or mode) will be selected based on the distribution of the non-missing values.
+
+
+[ ]
+#Find the count of unique values in the AMT_REQ_CREDIT_BUREAU_QRT column.
+train['AMT_REQ_CREDIT_BUREAU_QRT'].value_counts()
+
+To gain a more comprehensive understanding of the data distribution, a histogram will be constructed to visually represent the frequency of different values within the column.
+
+
+[ ]
+#Calculate the number of unique values in the AMT_REQ_CREDIT_BUREAU_QRT column.
+train['AMT_REQ_CREDIT_BUREAU_QRT'].value_counts().plot(kind='bar')
+plt.show()
+
+
+[ ]
+#Calculate the mean, median and mode of the AMT_REQ_CREDIT_BUREAU_QRT column.
+print(f"Mean: {train['AMT_REQ_CREDIT_BUREAU_QRT'].mean()}")
+print(f"Median: {train['AMT_REQ_CREDIT_BUREAU_QRT'].median()}")
+print(f"Mode: {train['AMT_REQ_CREDIT_BUREAU_QRT'].mode()}")
+Mean: 0.26547414959848414
+Median: 0.0
+Mode: 0    0.0
+Name: AMT_REQ_CREDIT_BUREAU_QRT, dtype: float64
+
+[ ]
+#Fill the missing columns in the AMT_REQ_CREDIT_BUREAU_QRT column with mode.
+train['AMT_REQ_CREDIT_BUREAU_QRT'].fillna(train['AMT_REQ_CREDIT_BUREAU_QRT'].mode(), inplace=True)
+
+CONCLUSION
+
+Given the discrete nature of the data, the missing values will be filled with the mode (0.0), which is the most frequent value among non-missing entries.
+
+AMT_REQ_CREDIT_BUREAU_MON COLUMN
+
+To address missing values in the specified column, we will first identify the unique non-missing values and their corresponding frequencies. Subsequently, the most appropriate imputation method (mean, median, or mode) will be selected based on the distribution of the non-missing values.
+
+
+[ ]
+#Find the unique values present in the AMT_REQ_CREDIT_BUREAU_MON column.
+train['AMT_REQ_CREDIT_BUREAU_MON'].value_counts()
+
+To gain a more comprehensive understanding of the data distribution, a histogram will be constructed to visually represent the frequency of different values within the column.
+
+
+[ ]
+#Plot  a histogram for the AMT_REQ_CREDIT_BUREAU_MON column against the unique values.
+train['AMT_REQ_CREDIT_BUREAU_MON'].value_counts().plot(kind='bar')
+plt.show()
+
+
+
+CONCLUSION
+
+Due to the high prevalence of zero values and the minimal variation in non-zero values, this column can be considered a near-constant feature and may be excluded from further analysis to reduce dimensionality.
+
+AMT_REQ_CREDIT_BUREAU_WEEK COLUMN
+
+To address missing values in the specified column, we will first identify the unique non-missing values and their corresponding frequencies. Subsequently, the most appropriate imputation method (mean, median, or mode) will be selected based on the distribution of the non-missing values.
+
+
+[ ]
+#Calculate the number of unique values in the AMT_REQ_CREDIT_BUREAU_WEEK column.
+train['AMT_REQ_CREDIT_BUREAU_WEEK'].value_counts()
+
+To gain a more comprehensive understanding of the data distribution, a histogram will be constructed to visually represent the frequency of different values within the column.
+
+
+[ ]
+#Create a histogram for the AMT_REQ_CREDIT_BUREAU_WEEK column agains the unique values.
+train['AMT_REQ_CREDIT_BUREAU_WEEK'].value_counts().plot(kind='bar')
+plt.show()
+
+CONCLUSION
+
+Due to the high prevalence of zero values and the minimal variation in non-zero values, this column can be considered a near-constant feature and may be excluded from further analysis to reduce dimensionality.
+
+AMT_REQ_CREDIT_BUREAU_DAY COLUMN
+
+To address missing values in the specified column, we will first identify the unique non-missing values and their corresponding frequencies. Subsequently, the most appropriate imputation method (mean, median, or mode) will be selected based on the distribution of the non-missing values.
+
+
+[ ]
+#Find the number of unique values in the AMT_REQ_CREDIT_BUREAU_DAY column.
+train['AMT_REQ_CREDIT_BUREAU_DAY'].value_counts()
+
+To gain a more comprehensive understanding of the data distribution, a histogram will be constructed to visually represent the frequency of different values within the column.
+
+
+[ ]
+#Plot a histogram for the AMT_REQ_CREDIT_BUREAU_DAY column against the value counts.
+train['AMT_REQ_CREDIT_BUREAU_DAY'].value_counts().plot(kind='bar')
+plt.show()
+
+
+CONCLUSION
+
+Due to the high prevalence of zero values and the minimal variation in non-zero values, this column can be considered a near-constant feature and may be excluded from further analysis to reduce dimensionality.
+
+
+[ ]
+#Find the number of unique values for the AMT_REQ_CREDIT_BUREAU_HOUR    column.
+train['AMT_REQ_CREDIT_BUREAU_HOUR'].value_counts()
+
+To gain a more comprehensive understanding of the data distribution, a histogram will be constructed to visually represent the frequency of different values within the column.
+
+
+[ ]
+#Plot a histogram for the AMT_REQ_CREDIT_BUREAU_HOUR    column against the unique values.
+train['AMT_REQ_CREDIT_BUREAU_HOUR'].value_counts().plot(kind='bar')
+plt.show()
+
+CONCLUSION
+
+Due to the high prevalence of zero values and the minimal variation in non-zero values, this column can be considered a near-constant feature and may be excluded from further analysis to reduce dimensionality.
+
+
+[ ]
+#Get the names of all the colums of the train
+train.columns
+Index(['SK_ID_CURR', 'TARGET', 'NAME_CONTRACT_TYPE', 'CODE_GENDER',
+       'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CNT_CHILDREN', 'AMT_INCOME_TOTAL',
+       'AMT_CREDIT', 'AMT_ANNUITY', 'AMT_GOODS_PRICE', 'NAME_TYPE_SUITE',
+       'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS',
+       'NAME_HOUSING_TYPE', 'REGION_POPULATION_RELATIVE', 'DAYS_BIRTH',
+       'DAYS_EMPLOYED', 'DAYS_REGISTRATION', 'DAYS_ID_PUBLISH', 'FLAG_MOBIL',
+       'FLAG_EMP_PHONE', 'FLAG_WORK_PHONE', 'FLAG_CONT_MOBILE', 'FLAG_PHONE',
+       'FLAG_EMAIL', 'OCCUPATION_TYPE', 'CNT_FAM_MEMBERS',
+       'REGION_RATING_CLIENT', 'REGION_RATING_CLIENT_W_CITY',
+       'WEEKDAY_APPR_PROCESS_START', 'HOUR_APPR_PROCESS_START',
+       'REG_REGION_NOT_LIVE_REGION', 'REG_REGION_NOT_WORK_REGION',
+       'LIVE_REGION_NOT_WORK_REGION', 'REG_CITY_NOT_LIVE_CITY',
+       'REG_CITY_NOT_WORK_CITY', 'LIVE_CITY_NOT_WORK_CITY',
+       'ORGANIZATION_TYPE', 'EXT_SOURCE_2', 'EXT_SOURCE_3',
+       'YEARS_BEGINEXPLUATATION_AVG', 'FLOORSMAX_AVG',
+       'YEARS_BEGINEXPLUATATION_MODE', 'FLOORSMAX_MODE',
+       'YEARS_BEGINEXPLUATATION_MEDI', 'FLOORSMAX_MEDI', 'TOTALAREA_MODE',
+       'EMERGENCYSTATE_MODE', 'OBS_30_CNT_SOCIAL_CIRCLE',
+       'DEF_30_CNT_SOCIAL_CIRCLE', 'OBS_60_CNT_SOCIAL_CIRCLE',
+       'DEF_60_CNT_SOCIAL_CIRCLE', 'DAYS_LAST_PHONE_CHANGE', 'FLAG_DOCUMENT_2',
+       'FLAG_DOCUMENT_3', 'FLAG_DOCUMENT_4', 'FLAG_DOCUMENT_5',
+       'FLAG_DOCUMENT_6', 'FLAG_DOCUMENT_7', 'FLAG_DOCUMENT_8',
+       'FLAG_DOCUMENT_9', 'FLAG_DOCUMENT_10', 'FLAG_DOCUMENT_11',
+       'FLAG_DOCUMENT_12', 'FLAG_DOCUMENT_13', 'FLAG_DOCUMENT_14',
+       'FLAG_DOCUMENT_15', 'FLAG_DOCUMENT_16', 'FLAG_DOCUMENT_17',
+       'FLAG_DOCUMENT_18', 'FLAG_DOCUMENT_19', 'FLAG_DOCUMENT_20',
+       'FLAG_DOCUMENT_21', 'AMT_REQ_CREDIT_BUREAU_HOUR',
+       'AMT_REQ_CREDIT_BUREAU_DAY', 'AMT_REQ_CREDIT_BUREAU_WEEK',
+       'AMT_REQ_CREDIT_BUREAU_MON', 'AMT_REQ_CREDIT_BUREAU_QRT',
+       'AMT_REQ_CREDIT_BUREAU_YEAR'],
+      dtype='object')
+DAYS_BIRTH COLUMN
+
+To align the age data with a more standard unit, the values will be converted from days to years and rounded to the nearest integer. Additionally, negative age values will be transformed into positive values to ensure data consistency.
+
+
+[ ]
+# Display the first few rows of the "DAYS_BIRTH" column in the dataframe "train"
+train['DAYS_BIRTH'].head()
+
+To standardize the age data, the values will be converted from days to years.
+
+
+[ ]
+# Convert the values in "DAYS_BIRTH" column from days to years and display the first few rows
+train['DAYS_BIRTH'] = round(-train['DAYS_BIRTH'] / 365)
+train['DAYS_BIRTH'].head()
+
+To gain a more comprehensive understanding of the data distribution, a histogram will be constructed to visually represent the frequency of different values within the column.
+
+
+[ ]
+#Plot a histplot for the DAYS_BIRTH column
+sns.histplot(train['DAYS_BIRTH'])
+plt.show()
+
+To align with a more standard unit of time, the values in the DAYS_REGISTRATION and DAYS_ID_PUBLISH columns will be converted from days to years.
+
+
+[ ]
+# Convert the values in the 'DAYS_REGISTRATION' column from days to years and display the first few rows
+train['DAYS_REGISTRATION'] = -round(train['DAYS_REGISTRATION'] / 365, 0)
+train['DAYS_REGISTRATION'].head()
+
+
+[ ]
+# Convert the values in the 'DAYS_ID_PUBLISH' column from days to years and display the first few rows
+train['DAYS_ID_PUBLISH'] = -round(train['DAYS_ID_PUBLISH'] / 365, 0)
+train['DAYS_ID_PUBLISH'].head()
+
+
+[ ]
+# Get the datatypes of each column in the Dataframe "train"
+train.dtypes
+
+TARGET COLUMN
+
+Analyzing user types to identify potential relationships or balances through their respective ratios.
+
+
+[ ]
+# Count the number of non-null values in the 'TARGET' column of the DataFrame 'train'
+train['TARGET'].count()
+train['TARGET'].value_counts()
+
+
+[ ]
+# Calculate the ratio of records with 'TARGET' value equal to 0 to records with 'TARGET' value equal to 1
+(train['TARGET'] ==0).sum() / (train['TARGET'] ==1).sum()
+11.387150050352467
+The ratio indicates a significant data imbalance. To address this, we will separate the training data into two subsets: one with a target value of 0 and another with a target value of 1. We will analyze each subset individually to explore any existing relationships.
+
+
+[ ]
+#Create a subset where TARGET is equal to 1
+train_1 = train.loc[train['TARGET'] == 1]
+
+#Create a subset where TARGET is equal to 0
+train_0 = train.loc[train['TARGET'] == 0]
+Three types of plots is used for analysis:
+
+Pie Plot: This shows the values in a column as percentages, with the total adding up to 100%.
+
+Countplot: This displays the count of different categories, where Target=0 typically has a higher count than Target=1.
+
+Barplot: The dataset is split into two groups based on the target variable (Target=0 and Target=1), then further divided each group into different categories. These categories are plotted as percentages, where Target=0 and Target=1 have mostly equal values.
+
+
+[ ]
+def plotting(train, train0, train1, column):
+    """
+    Plots three types of visualizations for a given column in the dataset:
+    a pie chart of overall distribution, a countplot by category, and a bar plot of percentage distribution by target variable.
+
+    Parameters:
+    - train: DataFrame containing the entire dataset.
+    - train0: DataFrame filtered by the target variable with value 0.
+    - train1: DataFrame filtered by the target variable with value 1.
+    - column: The name of the column to be visualized.
+    """
+
+    # Assigning dataframes to local variables (This step might be redundant as we can directly use the function arguments)
+    train = train
+    train_0 = train0
+    train_1 = train1
+    col = column
+
+    # Initialize figure with a specific size
+    fig = plt.figure(figsize=(13,10))
+
+    # Create a subplot for the pie chart
+    ax1 = plt.subplot(221)
+    # Plotting pie chart for overall distribution of the column
+    train[col].value_counts().plot.pie(autopct="%1.0f%%", ax=ax1)
+    plt.title('Plotting data for the column: ' + column)
+
+    # Create a subplot for the countplot
+    ax2 = plt.subplot(222)
+    # Plotting count plot by category with hue as TARGET
+    sns.countplot(x=column, hue='TARGET', data=train, ax=ax2)
+    plt.xticks(rotation=90)
+    plt.title('Plotting data for target in terms of total count')
+
+    # Create a subplot for the bar plot
+    ax3 = plt.subplot(223)
+
+    # Preparing data for percentage distribution by target variable
+    df = pd.DataFrame()
+    df['0'] = ((train_0[col].value_counts() / len(train_0)) * 100).astype(int)  # Convert to percentage and integer
+    df['1'] = ((train_1[col].value_counts() / len(train_1)) * 100).astype(int)  # Convert to percentage and integer
+
+    # Plotting bar plot for percentage distribution
+    df.plot.bar(ax=ax3)
+    plt.title('Plotting data for target in terms of percentage')
+
+    # Customize y-axis for percentages and gridlines
+    plt.ylabel('Percentage (%)')  # Label the y-axis
+    y_ticks = np.arange(0, 101, 10)  # Create ticks for every 10%
+    plt.yticks(y_ticks)  # Set the y-axis ticks
+    plt.grid(axis='y', linestyle='--', alpha=0.7)  # Add gridlines for every 10%
+
+
+    # Adjust layout to prevent overlap
+    fig.tight_layout()
+
+    # Display the plots
+    plt.show()
+
+UNIVARIATE ANALYSIS OF CATEGORICAL DATA
+
+Visualizing Data Distribution Take, for instance, the column "NAME_CONTRACT_TYPE". The visualizations produced offer insightful data distributions:
+
+Pie Chart (First Plot): It reveals that 90% of the entries are 'Cash loans', while the remaining 10% are 'Revolving loans'. This chart provides a straightforward view of the overall category proportions within the column.
+
+Count Plot (Second Plot): This visualization differentiates between 'Cash loans' and 'Revolving loans' based on the TARGET variable. For TARGET=0 (no default), there are approximately 250,000 'Cash loans' and around 2,500 'Revolving loans'. The plot offers a similar breakdown for TARGET=1 (default), enabling a comparison of counts between the two TARGET categories.
+
+Percentage Bar Plot (Third Plot): In this plot, the data is presented in terms of percentage, focusing on the relative distribution within each TARGET category. The 'Cash loans' and 'Revolving loans' are stacked (in blue for TARGET=0 and orange for TARGET=1), with the sum of the percentages for each loan type within a TARGET category equating to 100%. This plot emphasizes the proportionate representation of each loan type within the groups defined by the TARGET variable.
+
+
+[ ]
+# Finding the data type of TARGET.
+train.TARGET.dtype
+dtype('int64')
+
+[ ]
+# Finding the Data type of columns in train.
+train.dtypes
+
+
+[ ]
+# Convert 'TARGET' to s string data type for categorical processing
+train['TARGET'] = train['TARGET'].astype(str)
+
+# Change 'NAME_CONTRACT_TYPE' to a categorical type for optimized storage and plotting.
+train['NAME_CONTRACT_TYPE'] = train['NAME_CONTRACT_TYPE'].astype('category')
+Iterate through a list of categorical variables within the dataset, generating corresponding visualizations to analyze their distributions.
+
+
+[ ]
+# Find all the categorical data in train data
+train_categorical = train.select_dtypes(include=['object']).columns.tolist()
+train_categorical
+['TARGET',
+ 'CODE_GENDER',
+ 'FLAG_OWN_CAR',
+ 'FLAG_OWN_REALTY',
+ 'NAME_TYPE_SUITE',
+ 'NAME_INCOME_TYPE',
+ 'NAME_EDUCATION_TYPE',
+ 'NAME_FAMILY_STATUS',
+ 'NAME_HOUSING_TYPE',
+ 'OCCUPATION_TYPE',
+ 'WEEKDAY_APPR_PROCESS_START',
+ 'ORGANIZATION_TYPE',
+ 'EMERGENCYSTATE_MODE']
+
+[ ]
+# Iterate through a list of categorical column names, creating plots for each column
+for column in train_categorical:
+    print("Plotting ", column)
+    plotting(train, train_0, train_1, column)
+    print("="*70)
+
+Analysis of Key Variables Influencing Loan Behavior and Default Rates
+
+The analysis reveals several significant factors that correlate with loan default rates:
+
+Gender: While males are less likely to take out loans, they have a disproportionately higher default rate compared to females, suggesting gender as a potential risk indicator.
+
+Income Type: Pensioners demonstrate a lower default rate, indicating that despite potentially fixed or lower incomes, they exhibit greater reliability in loan repayment.
+
+Education Level: Loans are primarily sought by individuals with secondary and higher education. However, borrowers with secondary education have a significantly higher default rate compared to those with higher education, emphasizing the importance of educational attainment in assessing repayment capacity.
+
+Marital Status: Married individuals constitute the largest group of loan applicants and have a lower default rate. Conversely, singles and those in civil marriages exhibit higher default rates, highlighting the influence of marital status on loan repayment behavior.
+
+Occupation: Laborers and various staff categories are the most common loan applicants, but managers and high-skilled tech staff demonstrate superior repayment reliability. This underscores the role of occupation type in predicting loan default risk.
+
+ANALYSIS OF NUMERICAL COLUMNS
+
+Non-Defaulter Correlation
+
+
+[ ]
+# Filter only numeric columns from train_0 for correlation analysis.
+numeric_columns_0 = train_0.select_dtypes(include=[np.number]).columns
+train_0_numeric = train_0[numeric_columns_0]
+
+
+# Calculate the correlation matrix for the numeric columns.
+corr = train_0_numeric.corr()
+
+mask = np.zeros_like(corr)
+mask[np.triu_indices_from(mask)] = True
+
+# Create a heatmap to visualize the correlation matrix.
+plt.figure(figsize=(11,9))
+sns.heatmap(corr, annot=False, mask=mask, square=True, vmax=0.2)
+plt.title('Correlation Heatmap')
+plt.show()
+
+
+FINDING THE TOP 10 CORRELATION
+
+
+[ ]
+# Display missing values in the numeric_columns.
+numeric_columns_0.isnull().sum()
+0
+
+[ ]
+# Select only the numeric columns from the DataFrame
+numeric_columns_0 = train_0.select_dtypes(include=[np.number]).columns
+
+# Calculate the absolute correlation value for numeric_columns.
+corr_abm_0 = train_0[numeric_columns_0].corr().abs()
+
+# Unstack and sort the correlation pair.
+corr_abm_0 = corr_abm_0.unstack().sort_values(ascending=False)
+
+# Optionally, drop NA values if there were any missing correlations due to missing data
+corr_abm_0 = corr_abm_0.dropna()
+
+# Display or process your sorted correlation pairs
+print(corr_abm_0)
+SK_ID_CURR                    SK_ID_CURR                      1.000000
+REGION_RATING_CLIENT          REGION_RATING_CLIENT            1.000000
+FLOORSMAX_MODE                FLOORSMAX_MODE                  1.000000
+YEARS_BEGINEXPLUATATION_MODE  YEARS_BEGINEXPLUATATION_MODE    1.000000
+FLOORSMAX_AVG                 FLOORSMAX_AVG                   1.000000
+                                                                ...   
+FLAG_DOCUMENT_4               YEARS_BEGINEXPLUATATION_MEDI    0.000008
+FLAG_MOBIL                    FLAG_DOCUMENT_12                0.000005
+FLAG_DOCUMENT_12              FLAG_MOBIL                      0.000005
+EXT_SOURCE_2                  FLAG_DOCUMENT_2                 0.000004
+FLAG_DOCUMENT_2               EXT_SOURCE_2                    0.000004
+Length: 4461, dtype: float64
+
+[ ]
+# Display top 10 correlation.
+corr_abm_0[corr_abm_0 != 1.0].head(20)
+
+Determining the distribution of correlation coefficients across specified ranges to facilitate further analysis.
+
+
+[ ]
+# Taking 'corr_abm' is the correlation matrix
+corr_abm_0 = pd.DataFrame(corr_abm_0)  #
+
+# Defining the range intervals
+ranges = [(0.1, 0.2), (0.2, 0.3), (0.3, 0.4), (0.4, 0.5), (0.5, 0.6), (0.6, 0.7), (0.7, 0.8), (0.8, 0.9), (0.9, 1.0)]
+
+# Count the correlations within each range
+counts = {}
+for start, end in ranges:
+    count = ((start <= corr_abm_0) & (corr_abm_0 < end)).sum().sum()
+    counts[(start, end)] = count
+
+# Print the results
+for range, count in counts.items():
+    print(f"Correlation range {range}: {count}")
+Correlation range (0.1, 0.2): 196
+Correlation range (0.2, 0.3): 76
+Correlation range (0.3, 0.4): 20
+Correlation range (0.4, 0.5): 12
+Correlation range (0.5, 0.6): 8
+Correlation range (0.6, 0.7): 10
+Correlation range (0.7, 0.8): 4
+Correlation range (0.8, 0.9): 8
+Correlation range (0.9, 1.0): 20
+
+[ ]
+import matplotlib.pyplot as plt
+
+# Define the range intervals
+ranges = [(0.1, 0.2), (0.2, 0.3), (0.3, 0.4), (0.4, 0.5), (0.5, 0.6), (0.6, 0.7), (0.7, 0.8), (0.8, 0.9), (0.9, 1.0)]
+
+# Count the correlations within each range
+corr_counts = {}
+for start, end in ranges:
+    count_corr = ((start <= corr_abm_0) & (corr_abm_0 < end)).sum().sum()  # Count correlations within range
+    corr_counts[f"{start} - {end}"] = count_corr  # Store range as a string
+
+# Extract the ranges (x-axis) and the counts (y-axis)
+ranges_labels = list(corr_counts.keys())
+counts = list(corr_counts.values())
+
+# Create the bar plot
+plt.figure(figsize=(10, 6))
+plt.bar(ranges_labels, counts, color='skyblue', edgecolor='black')
+
+# Add labels and title
+plt.xlabel('Correlation Range', fontsize=14)
+plt.ylabel('Count of Correlations', fontsize=14)
+plt.title('Counts of Correlations in Different Ranges', fontsize=16)
+
+# Rotate x-axis labels for better readability
+plt.xticks(rotation=45)
+
+# Show the plot
+plt.tight_layout()
+plt.show()
+
+
+TOP CORRELATION FOR DEFAULTERS
+
+DEFAULTER CORRELATION
+
+
+[ ]
+# Filter only numeric columns from train_0 for correlation analysis.
+numeric_columns_1 = train_1.select_dtypes(include=[np.number]).columns
+train_1_numeric = train_1[numeric_columns_1]
+
+
+# Calculate the correlation matrix for the numeric columns.
+corr = train_1_numeric.corr()
+
+mask = np.zeros_like(corr)
+mask[np.triu_indices_from(mask)] = True
+
+# Create a heatmap to visualize the correlation matrix.
+plt.figure(figsize=(11,9))
+sns.heatmap(corr, annot=False, mask=mask, square=True, vmax=0.2)
+plt.title('Correlation Heatmap')
+plt.show()
+
+
+[ ]
+# Display missing values in the numeric_columns.
+numeric_columns_0.isnull().sum()
+0
+
+[ ]
+# Select only the numeric columns from the DataFrame
+numeric_columns_1 = train_0.select_dtypes(include=[np.number]).columns
+
+# Calculate the absolute correlation value for numeric_columns.
+corr_abm_1 = train_1[numeric_columns_1].corr().abs()
+
+# Unstack and sort the correlation pair.
+corr_abm_1 = corr_abm_1.unstack().sort_values(ascending=False)
+
+# Optionally, drop NA values if there were any missing correlations due to missing data
+corr_abm_1 = corr_abm_1.dropna()
+
+# Display or process your sorted correlation pairs
+print(corr_abm_1)
+SK_ID_CURR                    SK_ID_CURR                      1.000000
+REGION_RATING_CLIENT          REGION_RATING_CLIENT            1.000000
+YEARS_BEGINEXPLUATATION_MODE  YEARS_BEGINEXPLUATATION_MODE    1.000000
+FLOORSMAX_AVG                 FLOORSMAX_AVG                   1.000000
+YEARS_BEGINEXPLUATATION_AVG   YEARS_BEGINEXPLUATATION_AVG     1.000000
+                                                                ...   
+AMT_REQ_CREDIT_BUREAU_WEEK    AMT_INCOME_TOTAL                0.000018
+LIVE_REGION_NOT_WORK_REGION   REG_CITY_NOT_LIVE_CITY          0.000011
+REG_CITY_NOT_LIVE_CITY        LIVE_REGION_NOT_WORK_REGION     0.000011
+FLAG_DOCUMENT_20              REGION_RATING_CLIENT            0.000010
+REGION_RATING_CLIENT          FLAG_DOCUMENT_20                0.000010
+Length: 3945, dtype: float64
+
+[ ]
+# Display top 10 correlation.
+corr_abm_1[corr_abm_1 != 1.0].head(20)
+
+
+[ ]
+# Select only the numeric columns from the DataFrame
+numeric_train_1 = train_1.select_dtypes(include=[np.number])
+
+# Access the data using the selected columns before calculating correlation.
+corr_abm_1 = numeric_train_1.corr().abs()
+
+# Unstack and sort the correlation pair.
+corr_abm_pairs = corr_abm_1.unstack().sort_values(kind="quicksort", ascending=False)
+
+# Optionally, drop NA values if there were any missing correlations due to missing data
+corr_abm_pairs = corr_abm_pairs.dropna()
+corr_abm_1 = corr_abm_1[corr_abm_1 != 1.0]
+
+# Display or process your sorted correlation pairs
+print(corr_abm_1)
+                            SK_ID_CURR  TARGET  CNT_CHILDREN  \
+SK_ID_CURR                         NaN     NaN      0.005144   
+TARGET                             NaN     NaN           NaN   
+CNT_CHILDREN                  0.005144     NaN           NaN   
+AMT_INCOME_TOTAL              0.010165     NaN      0.004796   
+AMT_CREDIT                    0.001290     NaN      0.001675   
+...                                ...     ...           ...   
+AMT_REQ_CREDIT_BUREAU_DAY     0.007954     NaN      0.013004   
+AMT_REQ_CREDIT_BUREAU_WEEK    0.002999     NaN      0.011792   
+AMT_REQ_CREDIT_BUREAU_MON     0.006436     NaN      0.012583   
+AMT_REQ_CREDIT_BUREAU_QRT     0.000880     NaN      0.018174   
+AMT_REQ_CREDIT_BUREAU_YEAR    0.008916     NaN      0.035427   
+
+                            AMT_INCOME_TOTAL  AMT_CREDIT  AMT_ANNUITY  \
+SK_ID_CURR                          0.010165    0.001290     0.007578   
+TARGET                                   NaN         NaN          NaN   
+CNT_CHILDREN                        0.004796    0.001675     0.031257   
+AMT_INCOME_TOTAL                         NaN    0.038131     0.046421   
+AMT_CREDIT                          0.038131         NaN     0.752195   
+...                                      ...         ...          ...   
+AMT_REQ_CREDIT_BUREAU_DAY           0.000272    0.003008     0.000294   
+AMT_REQ_CREDIT_BUREAU_WEEK          0.000018    0.007650     0.031242   
+AMT_REQ_CREDIT_BUREAU_MON           0.004114    0.055038     0.053413   
+AMT_REQ_CREDIT_BUREAU_QRT           0.001133    0.017467     0.010205   
+AMT_REQ_CREDIT_BUREAU_YEAR          0.001752    0.035719     0.013841   
+
+                            AMT_GOODS_PRICE  REGION_POPULATION_RELATIVE  \
+SK_ID_CURR                         0.001816                    0.006301   
+TARGET                                  NaN                         NaN   
+CNT_CHILDREN                       0.008112                    0.031975   
+AMT_INCOME_TOTAL                   0.037583                    0.009135   
+AMT_CREDIT                         0.983103                    0.069161   
+...                                     ...                         ...   
+AMT_REQ_CREDIT_BUREAU_DAY          0.004280                    0.005483   
+AMT_REQ_CREDIT_BUREAU_WEEK         0.007980                    0.002904   
+AMT_REQ_CREDIT_BUREAU_MON          0.058558                    0.071329   
+AMT_REQ_CREDIT_BUREAU_QRT          0.016024                    0.007299   
+AMT_REQ_CREDIT_BUREAU_YEAR         0.037848                    0.000602   
+
+                            DAYS_BIRTH  DAYS_EMPLOYED  ...  FLAG_DOCUMENT_18  \
+SK_ID_CURR                    0.001299       0.005151  ...          0.009181   
+TARGET                             NaN            NaN  ...               NaN   
+CNT_CHILDREN                  0.258910       0.191942  ...          0.004333   
+AMT_INCOME_TOTAL              0.002872       0.014979  ...          0.002177   
+AMT_CREDIT                    0.135318       0.000968  ...          0.011174   
+...                                ...            ...  ...               ...   
+AMT_REQ_CREDIT_BUREAU_DAY     0.007257       0.021363  ...          0.005703   
+AMT_REQ_CREDIT_BUREAU_WEEK    0.005570       0.014720  ...          0.007416   
+AMT_REQ_CREDIT_BUREAU_MON     0.005665       0.025738  ...          0.012550   
+AMT_REQ_CREDIT_BUREAU_QRT     0.017229       0.014982  ...          0.004834   
+AMT_REQ_CREDIT_BUREAU_YEAR    0.084279       0.035150  ...          0.050958   
+
+                            FLAG_DOCUMENT_19  FLAG_DOCUMENT_20  \
+SK_ID_CURR                          0.006382          0.003781   
+TARGET                                   NaN               NaN   
+CNT_CHILDREN                        0.001370          0.002395   
+AMT_INCOME_TOTAL                    0.000371          0.000450   
+AMT_CREDIT                          0.013442          0.016949   
+...                                      ...               ...   
+AMT_REQ_CREDIT_BUREAU_DAY           0.001744          0.001896   
+AMT_REQ_CREDIT_BUREAU_WEEK          0.003964          0.004310   
+AMT_REQ_CREDIT_BUREAU_MON           0.007082          0.000096   
+AMT_REQ_CREDIT_BUREAU_QRT           0.002809          0.001868   
+AMT_REQ_CREDIT_BUREAU_YEAR          0.014492          0.016392   
+
+                            FLAG_DOCUMENT_21  AMT_REQ_CREDIT_BUREAU_HOUR  \
+SK_ID_CURR                          0.006932                    0.012036   
+TARGET                                   NaN                         NaN   
+CNT_CHILDREN                        0.001136                    0.000382   
+AMT_INCOME_TOTAL                    0.000647                    0.000656   
+AMT_CREDIT                          0.021964                    0.005981   
+...                                      ...                         ...   
+AMT_REQ_CREDIT_BUREAU_DAY           0.001822                    0.246741   
+AMT_REQ_CREDIT_BUREAU_WEEK          0.004141                    0.006232   
+AMT_REQ_CREDIT_BUREAU_MON           0.007397                    0.007871   
+AMT_REQ_CREDIT_BUREAU_QRT           0.000373                    0.006584   
+AMT_REQ_CREDIT_BUREAU_YEAR          0.008696                    0.002652   
+
+                            AMT_REQ_CREDIT_BUREAU_DAY  \
+SK_ID_CURR                                   0.007954   
+TARGET                                            NaN   
+CNT_CHILDREN                                 0.013004   
+AMT_INCOME_TOTAL                             0.000272   
+AMT_CREDIT                                   0.003008   
+...                                               ...   
+AMT_REQ_CREDIT_BUREAU_DAY                         NaN   
+AMT_REQ_CREDIT_BUREAU_WEEK                   0.184098   
+AMT_REQ_CREDIT_BUREAU_MON                    0.012627   
+AMT_REQ_CREDIT_BUREAU_QRT                    0.000789   
+AMT_REQ_CREDIT_BUREAU_YEAR                   0.001239   
+
+                            AMT_REQ_CREDIT_BUREAU_WEEK  \
+SK_ID_CURR                                    0.002999   
+TARGET                                             NaN   
+CNT_CHILDREN                                  0.011792   
+AMT_INCOME_TOTAL                              0.000018   
+AMT_CREDIT                                    0.007650   
+...                                                ...   
+AMT_REQ_CREDIT_BUREAU_DAY                     0.184098   
+AMT_REQ_CREDIT_BUREAU_WEEK                         NaN   
+AMT_REQ_CREDIT_BUREAU_MON                     0.011994   
+AMT_REQ_CREDIT_BUREAU_QRT                     0.010151   
+AMT_REQ_CREDIT_BUREAU_YEAR                    0.016838   
+
+                            AMT_REQ_CREDIT_BUREAU_MON  \
+SK_ID_CURR                                   0.006436   
+TARGET                                            NaN   
+CNT_CHILDREN                                 0.012583   
+AMT_INCOME_TOTAL                             0.004114   
+AMT_CREDIT                                   0.055038   
+...                                               ...   
+AMT_REQ_CREDIT_BUREAU_DAY                    0.012627   
+AMT_REQ_CREDIT_BUREAU_WEEK                   0.011994   
+AMT_REQ_CREDIT_BUREAU_MON                         NaN   
+AMT_REQ_CREDIT_BUREAU_QRT                    0.001365   
+AMT_REQ_CREDIT_BUREAU_YEAR                   0.002559   
+
+                            AMT_REQ_CREDIT_BUREAU_QRT  \
+SK_ID_CURR                                   0.000880   
+TARGET                                            NaN   
+CNT_CHILDREN                                 0.018174   
+AMT_INCOME_TOTAL                             0.001133   
+AMT_CREDIT                                   0.017467   
+...                                               ...   
+AMT_REQ_CREDIT_BUREAU_DAY                    0.000789   
+AMT_REQ_CREDIT_BUREAU_WEEK                   0.010151   
+AMT_REQ_CREDIT_BUREAU_MON                    0.001365   
+AMT_REQ_CREDIT_BUREAU_QRT                         NaN   
+AMT_REQ_CREDIT_BUREAU_YEAR                   0.101756   
+
+                            AMT_REQ_CREDIT_BUREAU_YEAR  
+SK_ID_CURR                                    0.008916  
+TARGET                                             NaN  
+CNT_CHILDREN                                  0.035427  
+AMT_INCOME_TOTAL                              0.001752  
+AMT_CREDIT                                    0.035719  
+...                                                ...  
+AMT_REQ_CREDIT_BUREAU_DAY                     0.001239  
+AMT_REQ_CREDIT_BUREAU_WEEK                    0.016838  
+AMT_REQ_CREDIT_BUREAU_MON                     0.002559  
+AMT_REQ_CREDIT_BUREAU_QRT                     0.101756  
+AMT_REQ_CREDIT_BUREAU_YEAR                         NaN  
+
+[68 rows x 68 columns]
+Determining the distribution of correlation coefficients across specified ranges to facilitate further analysis.
+
+
+[ ]
+# Taking 'corr_abm' is the correlation matrix
+corr_abm_1 = pd.DataFrame(corr_abm_1)
+
+# Defining the range intervals
+ranges = [(0.1, 0.2), (0.2, 0.3), (0.3, 0.4), (0.4, 0.5), (0.5, 0.6), (0.6, 0.7), (0.7, 0.8), (0.8, 0.9), (0.9, 1.0)]
+
+# Count the correlations within each range
+counts = {}
+for start, end in ranges:
+    count = ((start <= corr_abm_1) & (corr_abm_1 < end)).sum().sum()
+    counts[(start, end)] = count
+
+# Print the results
+for range, count in counts.items():
+    print(f"Correlation range {range}: {count}")
+Correlation range (0.1, 0.2): 178
+Correlation range (0.2, 0.3): 54
+Correlation range (0.3, 0.4): 10
+Correlation range (0.4, 0.5): 10
+Correlation range (0.5, 0.6): 6
+Correlation range (0.6, 0.7): 10
+Correlation range (0.7, 0.8): 6
+Correlation range (0.8, 0.9): 6
+Correlation range (0.9, 1.0): 20
+
+[ ]
+# Display top 10 correlation.
+corr_abm_1[corr_abm_1 != 1.0].head(10)
+
+OUTLIER ANALYSIS
+
+Let us take the numerical columns and plot it against the index of the DataFrame 'train'.
+
+
+[ ]
+# Select columns with numerical datatypes ('int64', 'float64') from DataFrame 'train'
+train_categorical = train.select_dtypes(include=['int64', 'float64']).columns.tolist()
+train_categorical
+
+# Plot the numerical column against the index of the DataFrame 'train'
+for column in train_categorical:
+  title = 'Plotting data for the column: ' + column
+  plt.scatter(train.index, train[column])
+  plt.title(title)
+  plt.show()
+
+Outlier Analysis Key Considerations:
+
+Outlier identification is context-dependent, determined by the specific business problem. Assuming error-free data, the decision to exclude outliers is based on business requirements. Visual analysis suggests accurate data reporting, necessitating a focus on highlighting rather than removing extreme values.
+
+Columns Requiring Further Investigation:
+
+CNT_CHILDREN: Instances with more than 10 children are potential outliers. AMT_INCOME_TOTAL: A value around 1.2e8 stands out as a potential outlier due to its significant distance from the rest of the data. FLAG_MOBILE: The absence of a mobile phone might be considered an outlier, but its relevance depends on the business context. OBS_30_CNT_SOCIAL_CIRCLE, DEF_30_CNT_SOCIAL_CIRCLE, OBS_60_CNT_SOCIAL_CIRCLE: These columns also warrant attention for potential outliers.
+
+Converting Numerical Data to Categorical Data for Analysis
+
+Taking the 'AMT_ANNUITY' column and plotting it against its count.
+
+
+[ ]
+def amt_annuity(x):
+  if x <= 20000:
+    return "low"
+  elif x > 20000 and x <= 50000:
+    return "medium"
+  elif x > 50000 and x <= 100000:
+    return "high"
+  else:
+    return "very high"
+
+# Apply the "amt_annuity" function to create a new categorical column "amt_annuity_categorical"
+train['amt_annuity_categorical'] = train['AMT_ANNUITY'].apply(lambda x : amt_annuity(x))
+
+[ ]
+train['amt_annuity_categorical'].value_counts()
+
+
+[ ]
+# Plot a distribution plot for 'AMT_ANNUITY' column.
+sns.displot(train['amt_annuity_categorical'])
+plt.show()
+
+
+[ ]
+# Iterate over each categorical column to generate plots
+for column in train_categorical:
+    # Construct and print the title for current plot
+    title = "Plot of " + column
+    print(title)
+
+    # Plot histograms for the distribution of the variable for both TARGET categories
+    plt.hist(train_0[column], alpha=0.5, label='Target=0')  # Histogram for category '0'
+    plt.hist(train_1[column], alpha=0.5, label='Target=1')  # Histogram for category '1'
+    plt.legend()  # Add a legend to distinguish between categories
+    plt.show()  # Display the histogram
+
+    # Plot distribution plots for the non-null values in both TARGET categories
+    sns.distplot(train_0[column].dropna(), label='Target=0', kde=False, norm_hist=True)  # Distribution plot for '0'
+    sns.distplot(train_1[column].dropna(), label='Target=1', kde=False, norm_hist=True)  # Distribution plot for '1'
+    plt.legend()  # Add a legend to distinguish between categories
+    plt.show()  # Display the distribution plot
+
+    # Placeholder for a box plot function that might be defined elsewhere
+    # box_plot(train_0, train_1, column)
+
+    # Print a separator for readability between plots
+    print("------------------------------------------------------------------------")
+
+
+[ ]
+from scipy.stats import ks_2samp
+
+def identify_different_columns(train_0, train_1, categorical_columns, alpha=0.05):
+    """
+    Identifies columns where the distributions differ significantly for target = 0 and target = 1.
+
+    Args:
+        train_0 (DataFrame): Subset of the training data where the target is 0.
+        train_1 (DataFrame): Subset of the training data where the target is 1.
+        categorical_columns (list): List of columns to check.
+        alpha (float): Significance level for the KS test.
+
+    Returns:
+        different_columns (list): List of columns where distributions differ significantly.
+    """
+    different_columns = []
+
+    for column in categorical_columns:
+        # Perform KS test for continuous distributions
+        statistic, p_value = ks_2samp(train_0[column].dropna(), train_1[column].dropna())
+
+        # If p-value is less than alpha, distributions are considered significantly different
+        if p_value < alpha:
+            different_columns.append(column)
+
+    return different_columns
+
+# Example usage
+# Call the function and assign the result to 'different_columns'
+different_columns = identify_different_columns(train_0, train_1, train_categorical)
+print("Columns with different distributions:", different_columns)
+Columns with different distributions: ['CNT_CHILDREN', 'AMT_INCOME_TOTAL', 'AMT_CREDIT', 'AMT_ANNUITY', 'AMT_GOODS_PRICE', 'REGION_POPULATION_RELATIVE', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'DAYS_REGISTRATION', 'DAYS_ID_PUBLISH', 'FLAG_EMP_PHONE', 'FLAG_WORK_PHONE', 'FLAG_PHONE', 'CNT_FAM_MEMBERS', 'REGION_RATING_CLIENT', 'REGION_RATING_CLIENT_W_CITY', 'HOUR_APPR_PROCESS_START', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY', 'LIVE_CITY_NOT_WORK_CITY', 'EXT_SOURCE_2', 'EXT_SOURCE_3', 'YEARS_BEGINEXPLUATATION_AVG', 'FLOORSMAX_AVG', 'YEARS_BEGINEXPLUATATION_MODE', 'FLOORSMAX_MODE', 'YEARS_BEGINEXPLUATATION_MEDI', 'FLOORSMAX_MEDI', 'TOTALAREA_MODE', 'OBS_30_CNT_SOCIAL_CIRCLE', 'DEF_30_CNT_SOCIAL_CIRCLE', 'OBS_60_CNT_SOCIAL_CIRCLE', 'DEF_60_CNT_SOCIAL_CIRCLE', 'DAYS_LAST_PHONE_CHANGE', 'FLAG_DOCUMENT_3', 'FLAG_DOCUMENT_6', 'AMT_REQ_CREDIT_BUREAU_QRT', 'AMT_REQ_CREDIT_BUREAU_YEAR']
+
+[ ]
+# Display the count of columns in train_0 and train_1.
+len(train_0.columns), len(train_1.columns)
+(81, 81)
+
+[ ]
+# Display the count of different_columns.
+len(different_columns)
+38
+
+[ ]
+# Calculate the Pearson correlation matrix
+correlation_matrix = train[different_columns].corr(method='pearson')
+
+# Display the correlation matrix as a heatmap
+plt.figure(figsize=(12, 10))
+sns.heatmap(correlation_matrix, annot=False, cmap='coolwarm', vmax=1, fmt='.2f')
+plt.title('Correlation Matrix of Significant Columns')
+plt.show()
+
+return correlation_matrix
+
+
+[ ]
+def get_highly_correlated_columns(correlation_matrix, threshold=0.7):
+    """
+    Finds pairs of columns with a correlation above the specified threshold (0.7 to 1.0).
+
+    Args:
+        correlation_matrix (DataFrame): The correlation matrix of the columns.
+        threshold (float): The correlation value threshold (default is 0.7).
+
+    Returns:
+        correlated_columns (list): List of tuples containing pairs of correlated columns and their correlation values.
+    """
+    correlated_columns = []
+
+    # Iterate over the correlation matrix and extract column pairs with correlation above the threshold
+    for col in correlation_matrix.columns:
+        for idx in correlation_matrix.index:
+            corr_value = correlation_matrix.loc[idx, col]
+
+            # Only consider the upper triangle and avoid self-correlation (diagonal values of 1)
+            if col != idx and corr_value >= threshold:
+                correlated_columns.append((idx, col, corr_value))
+
+    # Sort the correlated columns in descending order by correlation value
+    correlated_columns.sort(key=lambda x: x[2], reverse=True)
+
+    return correlated_columns
+
+# Get highly correlated columns
+correlated_columns = get_highly_correlated_columns(correlation_matrix, threshold=0.7)
+
+# Print the results in descending order
+print("Highly correlated columns (correlation >= 0.7):")
+for col1, col2, corr_value in correlated_columns:
+    print(f"{col1} and {col2}: {corr_value:.2f}")
+
+return correlation_matrix
+
+
+
+
+[ ]
+# Count the number of correlation_matrix.
+len(correlated_columns)
+28
+A correlation analysis of the dataset 'train' identified 14 pairs of columns with a correlation coefficient exceeding 0.7. These pairs were detected from a total of 28 columns, indicating that certain variables in the dataset are highly correlated
+
+
+[ ]
+def plot_scatter_graphs(correlated_columns, train):
+    """
+    Plots scatter plots for each pair of correlated columns.
+
+    Args:
+        correlated_columns (list): List of tuples containing pairs of correlated columns.
+        train (DataFrame): The dataset containing the columns to be plotted.
+    """
+    for col1, col2, corr_value in correlated_columns:
+        plt.figure(figsize=(10, 6))
+
+        # Create a scatter plot
+        plt.scatter(train[col1], train[col2], alpha=0.6, edgecolors='w')
+
+        # Set plot properties
+        plt.title(f'Scatter Plot of {col1} vs {col2}\nCorrelation: {corr_value:.2f}')
+        plt.xlabel(col1)
+        plt.ylabel(col2)
+        plt.grid()  # Add grid for better readability
+        plt.show()  # Show the plot
+
+# Plot scatter plots for each correlated pair
+plot_scatter_graphs(correlated_columns, train)
+
+READING previous_application
+
+
+[ ]
+# Read the data from the file "previous_application.csv" into a DataFrame
+previous_application = pd.read_csv("/content/drive/MyDrive/previous_application.csv")
+previous_application.head()
+
+"The 'SK_ID_CURR' column is common to both the 'train' and 'previous_application' datasets. To assess data consistency and potential duplicates, we will compare these columns in both datasets. If matching 'SK_ID_CURR' values are found, we can merge the corresponding records. This will allow us to identify instances where a customer has applied for multiple loans or if there are redundant entries within a single loan application."
+
+
+[ ]
+# Display the shape of previous_application dataset.
+previous_application.shape
+(1670214, 37)
+
+[ ]
+# Display the number of unique id in previous_application dataset.
+previous_application.SK_ID_PREV.value_counts()
+
+
+[ ]
+# Display the number of unique id in previous_application dataset.
+previous_application.SK_ID_CURR.value_counts()
+
+The 'previous_application' dataset contains 1,670,214 rows and 37 columns. While the number of unique 'SK_ID_PREV' values matches this total, indicating a one-to-one correspondence, the count of unique 'SK_ID_CURR' values is substantially lower at 338,857. This disparity suggests that multiple 'SK_ID_PREV' entries are associated with the same 'SK_ID_CURR,' implying that a single current application ID has multiple corresponding previous application records.
+
+Merging DataFrames Train and Previous Application Based on SK_ID_PREV.
+
+
+[ ]
+# Merge "train" DataFrame with "previous_application" DataFrame based on "SK_ID_CURR"
+# Using "inner" join to retain only common ropws between the two DataFrames
+
+previous_train = train.merge(previous_application , left_on='SK_ID_CURR', right_on='SK_ID_CURR', how='inner')
+previous_train.head()
+
+
+[ ]
+# Count the occurences of each unique value in the "SK_ID_CURR" column of the DataFrame "previous_application" and display the top values
+previous_application.SK_ID_CURR.value_counts().head()
+
+Segregating the train and previous_train dataset on Target = 0 and Target = 1.
+
+
+[ ]
+train['TARGET'] = train['TARGET'].astype(int)
+previous_train['TARGET'] = previous_train['TARGET'].astype(int)
+
+[ ]
+# Create a subset of the DataFrame 'train' containing records where the 'TARGET' column is equal to '0'
+train_0 = train.loc[train['TARGET'] == 0]
+
+# Create a subset of the DataFrame 'train' containing records where the 'TARGET' column is equal to '1'
+train_1 = train.loc[train['TARGET'] == 1]
+
+[ ]
+# Create a subset of the DataFrame 'previous_train' containing records where the 'TARGET' column is equal to '0'
+ptrain_0 = previous_train.loc[previous_train['TARGET'] == 0]
+
+# Create a subset of the DataFrame 'previous_train' containing records where the 'TARGET' column is equal to '1'
+ptrain_1 = previous_train.loc[previous_train['TARGET'] == 1]
+PLOTTING THE DATA
+
+
+[ ]
+train_1.head()
+# Display the count of rows in train_1
+len(train_1)
+24825
+
+[ ]
+def plotting(column, hue):
+    # Assign column and hue parameters to local variables
+    col = column
+    hue = hue
+
+    # Create a figure for the plots with a specific size
+    fig = plt.figure(figsize=(13,10))
+
+    # Subplot 1: Pie chart showing the distribution of values in the column
+    ax1 = plt.subplot(221)
+    train[col].value_counts().plot.pie(autopct="%1.0f%%", ax=ax1)
+    plt.title('Distribution of values for the column: '+ column)
+
+    # Subplot 2: Bar plot displaying the distribution of values by target categories
+    ax2 = plt.subplot(222)
+    df = pd.DataFrame()
+    df['0'] = ((train_0[col].value_counts()) / len(train_0))
+    df['1'] = ((train_1[col].value_counts()) / len(train_1))
+    df.plot.bar(ax=ax2)
+    plt.title('Distribution of values by target category')
+
+    # Subplot 3: Count plot showing the distribution of values for Target=0
+    ax3 = plt.subplot(223)
+    sns.countplot(x=col, hue=hue, data=ptrain_0, ax=ax3)
+    plt.xticks(rotation=90)
+    plt.title('Distribution of values for Target=0')
+
+    # Subplot 4: Count plot showing the distribution of values for Target=1
+    ax4 = plt.subplot(224)
+    sns.countplot(x=col, hue=hue, data=ptrain_1, ax=ax4)
+    plt.xticks(rotation=90)
+    plt.title('Distribution of values for Target=1')
+
+    # Adjust layout to prevent overlap
+    fig.tight_layout()
+
+    # Display the plots
+    plt.show()
+
+BIVARIATE ANALYSIS
+
+Lets take some potential priority plots.
+
+
+[ ]
+plotting('OCCUPATION_TYPE','NAME_INCOME_TYPE')
+
+
+[ ]
+plotting('NAME_EDUCATION_TYPE','NAME_CONTRACT_STATUS')
+
+
+[ ]
+plotting('NAME_FAMILY_STATUS','NAME_CONTRACT_STATUS')
+
+
+[ ]
+# Plot a pie chart to visualize the distribution of values in the 'ORGANIZATION_TYPE' column
+col = 'ORGANIZATION_TYPE'
+train[col].value_counts().plot.pie(autopct="%1.0f%%")
+plt.title("Distribution of " + col)
+plt.show()
+
+
+[ ]
+# Column to plot
+col = 'ORGANIZATION_TYPE'
+
+# Calculate value counts and percentages
+value_counts = train[col].value_counts()
+percentages = (value_counts / value_counts.sum()) * 100
+
+# Plot horizontal bar chart
+plt.figure(figsize=(10, 8))
+plt.barh(percentages.index, percentages, color='skyblue')
+
+# Add percentage labels to the bars
+for index, value in enumerate(percentages):
+    plt.text(value, index, f'{value:.2f}%', va='center')
+
+# Set x-axis limits to 100%
+plt.xlim(0, 100)
+
+# Add labels and title
+plt.xlabel('Percentage (%)')
+plt.ylabel('Organization Type')
+plt.title('Distribution of ' + col)
+
+# Show the plot
+plt.tight_layout()
+plt.show()
+
+
+[ ]
+value_counts = train[col].value_counts(normalize=True) * 100  # Calculate percentage of each value count
+
+# Filter out value counts that are more than 2 percent
+value_counts_filtered = value_counts[value_counts > 2]
+
+# Plot pie chart only if there are values with more than 2 percent count
+if not value_counts_filtered.empty:
+    value_counts_filtered.plot.pie(autopct="%1.0f%%")
+    plt.title(f"Distribution of {col} (more than 2%)")
+    plt.show()
+
+
+[ ]
+value_counts = train[col].value_counts(normalize=True) * 100  # Calculate percentage of each value count
+
+# Filter out value counts that are more than 2 percent
+value_counts_filtered = value_counts[value_counts > 2]
+
+# Plot pie chart only if there are values with more than 2 percent count
+if not value_counts_filtered.empty:
+    value_counts_filtered.plot.pie(autopct="%1.0f%%")
+    plt.title(f"Distribution of {col} (more than 2%)")
+    plt.show()
+
+
+[ ]
+plotting('CODE_GENDER','NAME_INCOME_TYPE')
+
+
+[ ]
+plotting('OCCUPATION_TYPE','NAME_CONTRACT_STATUS')
+
+
+[ ]
+plotting('NAME_FAMILY_STATUS','TARGET')
+
+
+[ ]
+plotting('FLAG_OWN_REALTY','NAME_INCOME_TYPE')
+
+
+[ ]
+plotting('FLAG_OWN_CAR','NAME_INCOME_TYPE')
+
+
+[ ]
+plotting('NAME_EDUCATION_TYPE','OCCUPATION_TYPE')
+
+
+[ ]
+# Define the column of interest
+col = 'ORGANIZATION_TYPE'
+
+# Create an empty DataFrame to hold the proportions of each category for each target group
+df = pd.DataFrame()
+
+# Calculate the proportions of each category for Target=0 and Target=1 and store them in the DataFrame
+df['0'] = train_0[col].value_counts(normalize=True)  # Proportions for Target=0
+df['1'] = train_1[col].value_counts(normalize=True)  # Proportions for Target=1
+
+# Set the figure size for the bar plot
+sns.set(rc={'figure.figsize':(15,5)})
+
+# Plot a bar plot showing the proportions of each category for both Target=0 and Target=1
+df.plot.bar()
+
+
+[ ]
+# Export the previous_train merged Data Set.
+previous_train.to_csv('previous_train.csv', index=False)
+
+[ ]
+# Downloading the previous_train DataSet for furthur analysis in Microsoft Power BI for better visualization and dashboard creation.
+from google.colab import files
+files.download('previous_train.csv')
+Let us Take the Columns and their pairs that have correlation value above 0.7 for our Analysis.
+
+
+[ ]
+# Display top 10 correlation.
+corr_abm_0[corr_abm_0 != 1.0].head(16)
+Conclusion for Credit Analysis Project
+
+The credit analysis project aimed to identify factors influencing payment difficulties among clients, represented by the target variable (TARGET). The analysis included the following key findings:
+
+Data Handling: We addressed missing values by replacing them with the median for numeric features and dropping non-informative columns, ensuring data integrity.
+
+Outlier Detection: Certain outliers, such as unusually high loan amounts, were identified and flagged for further investigation, recognizing their potential impact on the analysis.
+
+Data Imbalance: The dataset exhibited a significant imbalance in the target variable, with a higher proportion of clients not experiencing payment difficulties. This was quantified and visualized to emphasize its importance in the analysis.
+
+Univariate and Bivariate Analysis: Univariate analysis revealed key trends in individual features, while bivariate analysis explored relationships between features and the target variable, highlighting significant predictors of payment difficulties.
+
+Correlation Analysis: By segmenting the dataset based on the target variable, we identified the top 10 correlated features associated with clients experiencing payment difficulties, underscoring the importance of variables like prior loan amounts and financial behavior.
+
+Visualizations: Various plots, including histograms and bar charts, effectively communicated insights, illustrating critical differences between clients with and without payment difficulties.
+
+This analysis provides valuable insights into the factors affecting client payment difficulties, laying the groundwork for enhanced credit risk assessment.
+
+Colab paid products - Cancel contracts here
