@@ -82,12 +82,6 @@ High correlation found between loan amount and goods price
 
 🔧 How to Use This Repo
 
-# Clone this repository
-git clone https://github.com/yourusername/credit-risk-analyzer.git
-cd credit-risk-analyzer
-
-# Open and run the Jupyter Notebook (in Google Colab or local environment)
-
 To visualize data in Power BI:
 
 Open previous_train.csv
@@ -110,4 +104,5 @@ Data source: Home Credit Default Risk - Kaggle
 
 Notebook developed as part of upGrad Data Science program
 
-Author: Venkatraman SContact: venkatraman8062@gmail.comLinkedIn: linkedin.com/in/venkatraman8062
+Author: Venkatraman SContact: venkatraman8062@gmail.com
+LinkedIn: linkedin.com/in/venkatraman8062
